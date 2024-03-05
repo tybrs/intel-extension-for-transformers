@@ -20,7 +20,7 @@ from typing import List
 import os, types
 from fastchat.conversation import get_conv_template, Conversation
 from ..config import GenerationConfig
-from ..plugins import is_plugin_enabled, get_plugin_instance, get_registered_plugins
+from ..plugins import is_plugin_enabled, get_plugin_instance, get_registered_plugins, plugins
 from ..utils.common import is_audio_file
 from .model_utils import load_model, predict, predict_stream, MODELS
 from ..prompts import PromptTemplate
@@ -332,6 +332,9 @@ class BaseModel(ABC):
                                 return "Your query contains sensitive words, please try another query."
                             elif origin_query and plugin_instance.pre_llm_inference_actions(origin_query):
                                 return "Your query contains sensitive words, please try another query."
+                        elif plugin_name == "toxicity" and response:
+                            if response[0]['label'] == 'toxic' and plugins.toxicity.allow_input == False:
+                                return f"\nI'm sorry, but your query is TOXIC with an score of {response[0]['score']:.2f} (0-1)!!!\nIf you have any other non-toxic requests, feel free to ask me, and I'll be happy to help!"                        
                         else:
                             if response != None and response != False:
                                 query = response
